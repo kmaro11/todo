@@ -3,20 +3,20 @@
         <section class="todo">
             <div class="todo__wrap">
                 <h1 class="todo__title">TO DO List</h1>
-                <input type="text" class="todo__input" v-model="newTodo" v-on:keyup.enter="addTodo">
+                <input type="text" class="todo__input" v-model="newTodo" @keyup.enter="addTodo">
                 <div v-if="todoList.length >= 1"
                      class="todo__action-wrap">
-                    <p>left to do:{{ listCount }}</p>
+                    <p class="todo__display">left to do:{{ listCount }}</p>
                     <button class="todo__button"
                             :key="item.name"
                             @click="filterTodo(item.action)"
                             v-for="item in actionButtons">
                         {{item.name}}
                     </button>
+                    <p class="todo__display">Completed: {{completedTodos}}</p>
                 </div>
                 <div class="todo__list-wrap">
-                    <TodoItem :todoItem="item" v-for="item in showList" :key="item.title"/>
-
+                    <TodoItem :todoItem="item" v-for="item in showList" :key="item.title" @addStatus="changeAction"/>
                 </div>
             </div>
 
@@ -25,8 +25,6 @@
 </template>
 
 <script>
-  // @ is an alias to /src
-
   import TodoItem from '@/components/TodoItem'
 
   export default {
@@ -58,22 +56,25 @@
     },
     computed: {
       listCount () {
-        return this.todoList.length
+        return this.todoList.filter(item => !item.active).length
+      },
+      completedTodos () {
+        return this.todoList.filter(item => item.active).length
       },
       showList () {
         if (this.actionValue === 'all') {
           return this.todoList
         } else if (this.actionValue === 'active') {
-          console.log('active')
           return this.todoList.filter(item => item.active)
-        } else if (this.actionValue === 'delete') {
-          return this.todoList = []
+        } else {
+          return this.todoList
         }
       }
     },
     methods: {
 
       addTodo () {
+
         if (this.newTodo) {
           this.todoList.push({
             title: this.newTodo,
@@ -83,11 +84,24 @@
           this.newTodo = '';
         }
       },
-      deleteList (index) {
-        this.todoList.splice(this.todoList.indexOf(index), 1)
+      changeAction ({option, item}) {
+        console.log(option, item)
+        if (option === 'remove' && !item.star) {
+          this.showList.filter(todo => {
+            if (todo.title === item.title) {
+              this.showList.splice(todo, 1)
+            }
+          })
+        } else if (option === 'star') {
+          item.star = !item.star
+        }
       },
       filterTodo (item) {
-        this.actionValue = item
+        if (item === 'delete') {
+          this.todoList = []
+        } else {
+          this.actionValue = item
+        }
       },
 
     },
@@ -130,6 +144,10 @@
             margin-bottom: 15px;
         }
 
+        &__display {
+            margin: 0 10px;
+        }
+
         &__action-wrap {
             display: flex;
             align-items: center;
@@ -152,90 +170,9 @@
             width: 100%;
         }
 
-        &__list-item {
-            display: flex;
-            align-items: center;
-            padding: 15px;
-            border: 1px solid #f5f5f5;
-            margin: 5px;
-        }
-
-        &__delete {
-            margin-left: auto;
-        }
-
-        &__options-block {
-            position: relative;
-            margin-left: auto;
-        }
-
-        &__options-wrap {
-            position: absolute;
-            width: 80px;
-            padding: 10px;
-            top: -30px;
-            right: 30px;
-            box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2), 0 25px 50px 0 rgba(0, 0, 0, 0.1);
-            z-index: 10;
-            background: white;
-        }
-
-        &__options {
-            cursor: pointer;
-        }
-
-        &__option-btn-wrap {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        &__option-btn {
-            margin: 5px;
-            cursor: pointer;
-
-            &.remove {
-                color: #f25f66;
-            }
-
-            &.star {
-                color: #ffd662;
-            }
-        }
 
 
-        &__color_wrap {
-            display: flex;
-            align-items: center;
-            justify-content: space-around;
-            margin-bottom: 5px;
-        }
 
-        &__color-circle {
-            width: 12px;
-            height: 12px;
-            display: block;
-            border-radius: 50px;
-            cursor: pointer;
-
-            &.green {
-                background-color: #8adad6;
-            }
-
-            &.blue {
-                background-color: #6e81be;
-            }
-
-            &.red {
-                background-color: #f25f66;
-            }
-
-            &.black {
-                background-color: black;
-            }
-
-
-        }
 
     }
 
